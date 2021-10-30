@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Meter.Reading.Application.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -25,8 +26,9 @@ namespace Meter.Reading.Api.Controllers
         [HttpPost("meter-reading-uploads")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> PostReadings(IFormFile file,
-         CancellationToken cancellationToken)
+        public async Task<IActionResult> PostReadings(
+            [FromServices] IMeterReadingImporter meterReadingImporter,
+            IFormFile file)
         {
             if (file.Length > 0)
             {
@@ -37,10 +39,11 @@ namespace Meter.Reading.Api.Controllers
                     string encodedString = Convert.ToBase64String(fileBytes);
                     byte[] data = Convert.FromBase64String(encodedString);
                     string decodedString = Encoding.UTF8.GetString(data);
-                    // act on the Base64 data
+                    return Ok(await meterReadingImporter.ImportMeterData(decodedString));
                 }
             }
-            return await Task.Run(() => Ok());
+
+            return BadRequest();
         }
     }
 }

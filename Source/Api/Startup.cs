@@ -1,3 +1,4 @@
+using Meter.Reading.Api.Filters;
 using Meter.Reading.Application;
 using Meter.Reading.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -28,7 +29,10 @@ namespace Meter.Reading.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers(options => {
+                options.Filters.Add<ApiExceptionFilter>();
+            });
+
             services.AddApplication(Configuration);
             services.AddInfrastructure(Configuration);
             services.AddSwaggerGen(c =>

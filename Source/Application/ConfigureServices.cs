@@ -1,5 +1,7 @@
 ﻿using Meter.Reading.Application.Business;
+using Meter.Reading.Application.Filters;
 using Meter.Reading.Application.Interfaces;
+using Meter.Reading.Application.Validators;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -15,6 +17,8 @@ namespace Meter.Reading.Application
            IConfiguration configuration)
         {
             services.AddScoped<IAccountsCsvReader, AccountsCsvReader>();
+            services.AddScoped<IMeterReadingImporter, MeterReadingImporter>();
+            services.AddScoped<IReadingFilter, MatchingAccountFilter>();
 
             return services;
         }

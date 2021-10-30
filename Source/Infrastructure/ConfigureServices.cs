@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Meter.Reading.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -16,6 +17,8 @@ namespace Meter.Reading.Infrastructure
             services.AddDbContext<MeterReadingDbContext>(options => {
                 options.UseSqlServer(configuration.GetConnectionString("MeterReadingDbConnection"));
             });
+
+            services.AddScoped<IMeterReadingDbContext>(provider => provider.GetService<MeterReadingDbContext>());
 
             return services;
         }

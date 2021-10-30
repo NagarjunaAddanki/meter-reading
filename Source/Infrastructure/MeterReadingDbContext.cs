@@ -1,11 +1,12 @@
-﻿using Meter.Reading.Domain;
+﻿using Meter.Reading.Application.Interfaces;
+using Meter.Reading.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Reflection;
 
 namespace Meter.Reading.Infrastructure
 {
-    public class MeterReadingDbContext : DbContext
+    public class MeterReadingDbContext : DbContext , IMeterReadingDbContext
     {
         public DbSet<Account> Accounts { get; set; }
 
