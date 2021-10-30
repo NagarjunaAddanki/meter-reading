@@ -17,12 +17,12 @@ namespace Meter.Reading.Domain
         /// <summary>
         /// Date and time when the reading was taken
         /// </summary>
-        public DateTimeOffset ReadingDateTimeUtc { get; set; }
+        public DateTimeOffset MeterReadingDateTimeUtc { get; set; }
 
         /// <summary>
         /// Reading value.
         /// </summary>
-        public double Value { get; set; }
+        public double MeterReadingValue { get; set; }
 
         /// <summary>
         /// Account this reading belogs to

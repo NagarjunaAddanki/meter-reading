@@ -34,12 +34,12 @@ namespace Meter.Reading.Api.Controllers
             {
                 using (var ms = new MemoryStream())
                 {
+                    //Read the form data
                     file.CopyTo(ms);
-                    var fileBytes = ms.ToArray();
-                    string encodedString = Convert.ToBase64String(fileBytes);
-                    byte[] data = Convert.FromBase64String(encodedString);
-                    string decodedString = Encoding.UTF8.GetString(data);
-                    return Ok(await meterReadingImporter.ImportMeterData(decodedString));
+                    string encodedCsvData = Convert.ToBase64String(ms.ToArray());
+                    byte[] data = Convert.FromBase64String(encodedCsvData);
+                    string decodedCsvData = Encoding.UTF8.GetString(data);
+                    return Ok(await meterReadingImporter.ImportMeterData(decodedCsvData));
                 }
             }
 

@@ -40,15 +40,45 @@ namespace Meter.Reading.Infrastructure.Persistence.Migrations
                     b.Property<long>("AccountId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTimeOffset>("ReadingDateTimeUtc")
+                    b.Property<DateTimeOffset>("MeterReadingDateTimeUtc")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<double>("Value")
+                    b.Property<double>("MeterReadingValue")
                         .HasColumnType("float");
 
-                    b.HasKey("AccountId", "ReadingDateTimeUtc");
+                    b.HasKey("AccountId", "MeterReadingDateTimeUtc");
 
-                    b.ToTable("Readings");
+                    b.ToTable("MeterReadings");
+                });
+
+            modelBuilder.Entity("Meter.Reading.Domain.StagedMeterReading", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsValid")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MeterReadValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("MeterReadingDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StagedMeterReadings");
                 });
 
             modelBuilder.Entity("Meter.Reading.Domain.MeterReading", b =>

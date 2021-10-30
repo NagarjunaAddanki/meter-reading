@@ -14,6 +14,8 @@ namespace Meter.Reading.Application.Interfaces
 
         public DbSet<MeterReading> Readings { get; set; }
 
+        public DbSet<StagedMeterReading> StagedReadings { get; set; }
+
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
         int SaveChanges();

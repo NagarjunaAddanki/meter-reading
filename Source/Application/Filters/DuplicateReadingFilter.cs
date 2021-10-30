@@ -1,32 +1,40 @@
 ﻿using Meter.Reading.Application.Interfaces;
 using Meter.Reading.Application.Validators;
-using Meter.Reading.Domain;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Meter.Reading.Application.Filters
 {
-    class DuplicateReadingFilter: BaseReadingFilter, IReadingFilter
+    class DuplicateReadingFilter : BaseReadingFilter, IMeterReadingFilter
     {
         public DuplicateReadingFilter(IMeterReadingDbContext meterReadingDbContext) : base(meterReadingDbContext)
         {
 
         }
 
-        public List<MeterReading> Filter(List<MeterReading> meterReadings)
+        public async Task FilterAsync(Guid groupId)
         {
-            //Get the distinct account IDs
-            var accountIds = meterReadings.Select(r => r.AccountId).Distinct();
+            //Query all valid readings in this group.
+            var validReadings = from stagedReading in MeterReadingDbContext.StagedReadings
+                                where stagedReading.GroupId == groupId && stagedReading.IsValid
+                                select stagedReading;
 
-            //Query for matching accounts from Db.
-            var recognizedAccounts = MeterReadingDbContext.Readings.Where(a => accountIds.Contains(a.AccountId)).ToList();
+            //Join with readings table to find duplicate readings.
+            var duplicateReadings = from stagedReading in MeterReadingDbContext.StagedReadings
+                                    join meterReading in MeterReadingDbContext.Readings
+                                    on new { stagedReading.AccountId, stagedReading.MeterReadingDateTime } equals
+                                    new { meterReading.AccountId, MeterReadingDateTime = meterReading.MeterReadingDateTimeUtc }
+                                    where stagedReading.GroupId == groupId && stagedReading.IsValid
+                                    select stagedReading.Id;
 
-            //Return only those meter readings for which account exists in db.
-            return (from meterReading in meterReadings
-                    join account in recognizedAccounts on meterReading.AccountId equals account.AccountId
-                    select meterReading).ToList();
+            //Filter out anything which do not matches.
+            validReadings.ToList().ForEach(reading =>
+            {
+                reading.IsValid = !duplicateReadings.Contains(reading.Id);
+            });
+
+            await MeterReadingDbContext.SaveChangesAsync();
         }
     }
 }

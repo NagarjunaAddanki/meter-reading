@@ -18,7 +18,11 @@ namespace Meter.Reading.Application
         {
             services.AddScoped<IAccountsCsvReader, AccountsCsvReader>();
             services.AddScoped<IMeterReadingImporter, MeterReadingImporter>();
-            services.AddScoped<IReadingFilter, MatchingAccountFilter>();
+
+            //Filters expected on the meter readings.
+            services.AddScoped<IMeterReadingFilter, DataFormatFilter>();
+            services.AddScoped<IMeterReadingFilter, MatchingAccountFilter>();
+            services.AddScoped<IMeterReadingFilter, DuplicateReadingFilter>();
 
             return services;
         }

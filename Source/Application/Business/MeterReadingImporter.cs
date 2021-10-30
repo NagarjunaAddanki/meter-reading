@@ -13,17 +13,28 @@ using System.Threading.Tasks;
 
 namespace Meter.Reading.Application.Business
 {
+    /// <summary>
+    /// Class to import meter reading data in csv format to data store.
+    /// </summary>
     public class MeterReadingImporter : IMeterReadingImporter
     {
+        /// <summary>
+        /// Instance of database context.
+        /// </summary>
         private readonly IMeterReadingDbContext _meterReadingDbContext;
-        private readonly List<IReadingFilter> _dataFilters;
+
+        /// <summary>
+        /// List of data filters to be applied on meter readings.
+        /// </summary>
+        private readonly List<IMeterReadingFilter> _dataFilters;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="meterReadingDbContext"></param>
+        /// <param name="meterReadingDbContext">Instance of db context</param>
+        /// <param name="dataFilters">Data filters</param>
         public MeterReadingImporter(IMeterReadingDbContext meterReadingDbContext,
-            IEnumerable<IReadingFilter> dataFilters)
+            IEnumerable<IMeterReadingFilter> dataFilters)
         {
             _meterReadingDbContext = meterReadingDbContext;
             _dataFilters = dataFilters.ToList();
@@ -36,70 +47,107 @@ namespace Meter.Reading.Application.Business
         /// <returns>Import result</returns>
         public async Task<MeterReadingImportResult> ImportMeterData(string csvData)
         {
-            MeterReadingImportResult result = null;
-
-            //Read the CSV data and translate it to well formed
-            //meter readings.
-            var csvRecords = GetMeterReadingsFromCsvData(csvData);
-            var meterReadings = TranslateMeterReadingFromCsv(csvRecords);
-
-            //Filter out any meter readings which are not valid
-            _dataFilters.ForEach(filter =>
+            var groupId = await StageMeterReadingsFromCsvData(csvData); //Stage
+            await ApplyFilters(groupId); //Filter
+            var deployedReadings = await DeployValidMeterReadings(groupId); //Deploy
+            await FlushStagingData(groupId); //Flush
+            return new MeterReadingImportResult
             {
-                meterReadings = filter.Filter(meterReadings);
-            });
-
-            //Add the valid meter readings to db.
-            _meterReadingDbContext.Readings.AddRange(meterReadings);
-            await _meterReadingDbContext.SaveChangesAsync();
-            result = new MeterReadingImportResult
-            {
-                NumberOfReadingsImported = meterReadings.Count,
-                NumberOfReadingsFailed = csvRecords.Count - meterReadings.Count,
+                NumberOfReadingsImported = deployedReadings
             };
-
-            return result;
         }
 
-        private List<MeterReadingCsvViewModel> GetMeterReadingsFromCsvData(string csvData)
+        /// <summary>
+        /// Stages the csv data for processing.
+        /// </summary>
+        /// <param name="csvData">Csv data to be imported</param>
+        /// <returns></returns>
+        private async Task<Guid> StageMeterReadingsFromCsvData(string csvData)
         {
+            var groupId = Guid.NewGuid();
             using (var reader = new StringReader(csvData))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                return csv.GetRecords<MeterReadingCsvViewModel>().ToList();
+                var records = new List<StagedMeterReading>();
+                csv.Read();
+                csv.ReadHeader();
+                while (csv.Read())
+                {
+                    var record = new StagedMeterReading
+                    {
+                        GroupId = groupId,
+                        AccountId = csv.GetField<long>(0),
+                        MeterReadValue = csv.GetField(2)
+                    };
+
+                    //The data in csv is not invariant. Hence need to perform custom parsing.
+                    if (DateTime.TryParseExact(csv.GetField(1),
+                        "d/MM/yyyy H:mm", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var readTime))
+                    {
+                        record.MeterReadingDateTime = readTime;
+                        records.Add(record);
+                    }
+                }
+
+                await _meterReadingDbContext.StagedReadings.AddRangeAsync(records);
+                await _meterReadingDbContext.SaveChangesAsync();
+            }
+
+            return groupId;
+        }
+
+        /// <summary>
+        /// Apply data filters on the staged meter readings.
+        /// </summary>
+        /// <param name="groupId">Id of the group of readings which needs to be processed.</param>
+        /// <returns>awaitable task</returns>
+        private async Task ApplyFilters(Guid groupId)
+        {
+            foreach (var filter in _dataFilters)
+            {
+                await filter.FilterAsync(groupId);
             }
         }
 
         /// <summary>
-        /// Get Valid readings
+        /// Moved valid meter readings from staging to final meter readings table.
         /// </summary>
-        /// <param name="readings"></param>
+        /// <param name="groupId">Id of the group of readings which needs to be processed.</param>
         /// <returns></returns>
-        private List<MeterReading> TranslateMeterReadingFromCsv(List<MeterReadingCsvViewModel> readings)
+        private async Task<int> DeployValidMeterReadings(Guid groupId)
         {
-            var result = new List<MeterReading>();
+            //Query all valid readings in this group.
+            var validReadings = from stagedReading in _meterReadingDbContext.StagedReadings
+                                where stagedReading.GroupId == groupId && stagedReading.IsValid
+                                select stagedReading;
 
-            readings.ForEach(reading =>
+            var meterReadings = new List<MeterReading>();
+            validReadings.ToList().ForEach(reading =>
             {
-                if (long.TryParse(reading.AccountId, out var accountId)
-
-                //Date time must be in the given format.
-                && DateTime.TryParseExact(reading.MeterReadingDateTime,
-                        "d/MM/yyyy H:mm", CultureInfo.InvariantCulture,
-                        DateTimeStyles.None, out var readTime)
-                //Must have 5 digits
-                && reading.MeterReadValue.Length == 5
-                && double.TryParse(reading.MeterReadValue, out var value))
+                meterReadings.Add(new MeterReading
                 {
-                    result.Add(new MeterReading
-                    {
-                        AccountId = accountId,
-                        ReadingDateTimeUtc = DateTime.SpecifyKind(readTime, DateTimeKind.Utc),
-                        Value = value
-                    });
-                }
+                    AccountId = reading.AccountId,
+                    MeterReadingDateTimeUtc = reading.MeterReadingDateTime,
+                    MeterReadingValue = Convert.ToDouble(reading.MeterReadValue)
+                });
             });
-            return result;
+
+            await _meterReadingDbContext.Readings.AddRangeAsync(meterReadings);
+            await _meterReadingDbContext.SaveChangesAsync();
+            return validReadings.Count();
+        }
+
+        /// <summary>
+        /// Remove the staged readings which have finished processing.
+        /// </summary>
+        /// <param name="groupId">Id of the group of readings which needs to be flushed out.</param>
+        /// <returns></returns>
+        private async Task FlushStagingData(Guid groupId)
+        {
+            var readingsInThisGroup = _meterReadingDbContext.StagedReadings.Where(r => r.GroupId == groupId);
+            _meterReadingDbContext.StagedReadings.RemoveRange(readingsInThisGroup);
+            await _meterReadingDbContext.SaveChangesAsync();
         }
     }
 }

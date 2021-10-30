@@ -7,6 +7,5 @@ namespace Meter.Reading.Application.ViewModels
     public class MeterReadingImportResult
     {
         public int NumberOfReadingsImported { get; set; }
-        public int NumberOfReadingsFailed { get; set; }
     }
 }

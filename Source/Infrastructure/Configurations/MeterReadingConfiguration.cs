@@ -11,10 +11,10 @@ namespace Meter.Reading.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<MeterReading> builder)
         {
-            builder.ToTable("Readings");
+            builder.ToTable("MeterReadings");
 
             //Primary key definition
-            builder.HasKey(s => new { s.AccountId, s.ReadingDateTimeUtc });
+            builder.HasKey(s => new { s.AccountId, s.MeterReadingDateTimeUtc });
 
             //Define the relationship with account.
             builder.HasOne(lr => lr.Account).WithMany(l => l.Readings).HasForeignKey(lr => lr.AccountId);

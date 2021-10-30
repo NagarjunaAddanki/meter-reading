@@ -5,27 +5,38 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Meter.Reading.Application.Filters
 {
-    class MatchingAccountFilter :  BaseReadingFilter, IReadingFilter
+    class MatchingAccountFilter : BaseReadingFilter, IMeterReadingFilter
     {
         public MatchingAccountFilter(IMeterReadingDbContext meterReadingDbContext) : base(meterReadingDbContext)
         {
+
         }
 
-        public List<MeterReading> Filter(List<MeterReading> meterReadings)
+        public async Task FilterAsync(Guid groupId)
         {
-            //Get the distinct account IDs
-            var accountIds = meterReadings.Select(r => r.AccountId).Distinct();
+            //Query all valid readings in this group.
+            var validReadings = from stagedReading in MeterReadingDbContext.StagedReadings
+                                where stagedReading.GroupId == groupId && stagedReading.IsValid
+                                select stagedReading;
 
-            //Query for matching accounts from Db.
-            var recognizedAccounts = MeterReadingDbContext.Accounts.Where(a => accountIds.Contains(a.AccountId)).ToList();
+            //Join with accounts table
+            var matchedReadings = from stagedReading in MeterReadingDbContext.StagedReadings
+                                  join account in MeterReadingDbContext.Accounts
+                                 on stagedReading.AccountId equals account.AccountId
+                                 where stagedReading.GroupId == groupId && stagedReading.IsValid
+                                 select stagedReading.Id;
 
-            //Return only those meter readings for which account exists in db.
-            return (from meterReading in meterReadings
-                                join account in recognizedAccounts on meterReading.AccountId equals account.AccountId
-                                select meterReading).ToList();
+            //Filter out anything which do not matches.
+            validReadings.ToList().ForEach(reading =>
+            {
+                reading.IsValid = matchedReadings.Contains(reading.Id);
+            });
+
+            await MeterReadingDbContext.SaveChangesAsync();
         }
     }
 }
