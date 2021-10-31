@@ -1,7 +1,7 @@
 
 # Meter Reading
 
-Meter reading is an API to process a CSV file containing meter readings from various account holders.
+Meter reading is an API to process a CSV file containing meter readings from various account holders. The meter readings are read from the csv, validated and persisted in the data store.
 
 ## Usage
 
@@ -10,8 +10,7 @@ Run the following command to build and start the server. Server will be availabl
 ```
 dotnet run --project source\api
 ```
-Use postman to post a csv file containing meter readings to the following endpoint. Ensure that the name of the key in form data is **"file"**. The meter readings are read from the csv, validated and persisted in the data store.
-
+Use postman to post a csv file containing meter readings to the following endpoint. Ensure that the name of the key in form data is **"file"**. 
 **https://localhost:5001/MeterReading/meter-reading-uploads** 
 
 Response contains the number of records successfully processed from the provided csv meter readings.
