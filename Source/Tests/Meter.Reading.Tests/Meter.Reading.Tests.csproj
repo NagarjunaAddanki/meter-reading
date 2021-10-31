@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="6.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.11" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
@@ -14,6 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Application\Meter.Reading.Application.csproj" />
+    <ProjectReference Include="..\..\Domain\Meter.Reading.Domain.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Meter.Reading.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

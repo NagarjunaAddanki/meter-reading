@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Meter.Reading.Application.Filters
 {
-    class MatchingAccountFilter : BaseReadingFilter, IMeterReadingFilter
+    public class MatchingAccountFilter : BaseReadingFilter, IMeterReadingFilter
     {
         public MatchingAccountFilter(IMeterReadingDbContext meterReadingDbContext) : base(meterReadingDbContext)
         {

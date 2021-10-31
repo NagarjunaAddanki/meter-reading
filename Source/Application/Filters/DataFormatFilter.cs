@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Meter.Reading.Application.Filters
 {
-    class DataFormatFilter : BaseReadingFilter, IMeterReadingFilter
+    public class DataFormatFilter : BaseReadingFilter, IMeterReadingFilter
     {
         public DataFormatFilter(IMeterReadingDbContext meterReadingDbContext) : base(meterReadingDbContext)
         {

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Meter.Reading.Application.Filters
 {
-    abstract class BaseReadingFilter
+    public abstract class BaseReadingFilter
     {
         protected readonly IMeterReadingDbContext MeterReadingDbContext;
 

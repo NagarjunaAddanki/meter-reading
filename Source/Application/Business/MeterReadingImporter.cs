@@ -77,11 +77,11 @@ namespace Meter.Reading.Application.Business
                     {
                         GroupId = groupId,
                         AccountId = csv.GetField<long>(0),
-                        MeterReadValue = csv.GetField(2)
+                        MeterReadValue = csv.GetField(2).Trim()
                     };
 
                     //The data in csv is not invariant. Hence need to perform custom parsing.
-                    if (DateTime.TryParseExact(csv.GetField(1),
+                    if (DateTime.TryParseExact(csv.GetField(1).Trim(),
                         "d/MM/yyyy H:mm", CultureInfo.InvariantCulture,
                         DateTimeStyles.None, out var readTime))
                     {

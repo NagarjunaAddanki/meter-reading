@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meter.Reading.Application.Filters
 {
-    class DuplicateReadingFilter : BaseReadingFilter, IMeterReadingFilter
+    public class DuplicateReadingFilter : BaseReadingFilter, IMeterReadingFilter
     {
         public DuplicateReadingFilter(IMeterReadingDbContext meterReadingDbContext) : base(meterReadingDbContext)
         {
