@@ -18,7 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meter.Reading.Domain", "Sou
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meter.Reading.Infrastructure", "Source\Infrastructure\Meter.Reading.Infrastructure.csproj", "{74EC42FD-6226-4ECE-B645-DDFA6F084238}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meter.Reading.Tests", "Source\Tests\Meter.Reading.Tests\Meter.Reading.Tests.csproj", "{1764DB3F-AF9F-41D2-85E4-82714A5D007A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meter.Reading.Tests", "Source\Tests\Meter.Reading.Tests.csproj", "{EB6DAB7D-D9D6-4D0A-B090-40660A8D569B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,10 +42,10 @@ Global
 		{74EC42FD-6226-4ECE-B645-DDFA6F084238}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74EC42FD-6226-4ECE-B645-DDFA6F084238}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74EC42FD-6226-4ECE-B645-DDFA6F084238}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1764DB3F-AF9F-41D2-85E4-82714A5D007A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1764DB3F-AF9F-41D2-85E4-82714A5D007A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1764DB3F-AF9F-41D2-85E4-82714A5D007A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1764DB3F-AF9F-41D2-85E4-82714A5D007A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB6DAB7D-D9D6-4D0A-B090-40660A8D569B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB6DAB7D-D9D6-4D0A-B090-40660A8D569B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB6DAB7D-D9D6-4D0A-B090-40660A8D569B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB6DAB7D-D9D6-4D0A-B090-40660A8D569B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

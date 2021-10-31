@@ -15,9 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Application\Meter.Reading.Application.csproj" />
-    <ProjectReference Include="..\..\Domain\Meter.Reading.Domain.csproj" />
-    <ProjectReference Include="..\..\Infrastructure\Meter.Reading.Infrastructure.csproj" />
+    <ProjectReference Include="..\Application\Meter.Reading.Application.csproj" />
+    <ProjectReference Include="..\Domain\Meter.Reading.Domain.csproj" />
+    <ProjectReference Include="..\Infrastructure\Meter.Reading.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
