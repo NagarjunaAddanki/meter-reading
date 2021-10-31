@@ -10,6 +10,8 @@ Run the following command to build and start the server. Server will be availabl
 ```
 dotnet run --project source\api
 ```
+The project will be built and migrations run on local SQL express. NOTE - Change the connection string appropriately in the appsettings, if you do not have SQL express locally.
+
 Use postman to post a csv file containing meter readings to the following endpoint. Ensure that the name of the key in form data is **"file"**. 
 **https://localhost:5001/MeterReading/meter-reading-uploads** 
 
