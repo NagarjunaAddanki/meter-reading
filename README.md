@@ -13,7 +13,21 @@ dotnet run --project source\api
 Use postman to post a csv file containing meter readings to the following endpoint. Ensure that the name of the key in form data is **"file"**. 
 **https://localhost:5001/MeterReading/meter-reading-uploads** 
 
-Response contains the number of records successfully processed from the provided csv meter readings.
+Response will contain the following
+- Number of records successfully processed from the provided csv meter readings. 
+- Validation errors for one or more meter readings.
+
+An example 
+```json
+{
+    "numberOfReadingsImported": 4,
+    "validationErrors": [
+        "Meter reading [4534 - 11/05/2019 9:24] has invalid value []. The meter readings must be 5 digit positive number.",
+        "No matching account for the reading [67761 - 10/05/2019 9:24]",
+        "Meter reading [1239 - 17/05/2019 9:24] already exists"
+    ]
+}
+```
 
 ## Source Structure
 
