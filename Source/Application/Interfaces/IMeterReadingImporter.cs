@@ -8,6 +8,11 @@ namespace Meter.Reading.Application.Interfaces
 {
     public interface IMeterReadingImporter
     {
+        /// <summary>
+        /// Import meter readings into data store.
+        /// </summary>
+        /// <param name="csvData">Meter reading in csv format</param>
+        /// <returns>Import result</returns>
         Task<MeterReadingImportResult> ImportMeterData(string csvData);
     }
 }

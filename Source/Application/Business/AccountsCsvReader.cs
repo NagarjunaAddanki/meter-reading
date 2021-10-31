@@ -10,8 +10,10 @@ using System.Text;
 
 namespace Meter.Reading.Application.Business
 {
+    /// <inheritdoc />
     class AccountsCsvReader : IAccountsCsvReader
     {
+        /// <inheritdoc />
         public List<Account> ReadAccountsFromCsv(string path)
         {
             using (var reader = new StreamReader(path))

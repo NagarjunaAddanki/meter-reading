@@ -40,11 +40,7 @@ namespace Meter.Reading.Application.Business
             _dataFilters = dataFilters.ToList();
         }
 
-        /// <summary>
-        /// Import meter readings into data store.
-        /// </summary>
-        /// <param name="csvData">Meter reading in csv format</param>
-        /// <returns>Import result</returns>
+        /// <inheritdoc />
         public async Task<MeterReadingImportResult> ImportMeterData(string csvData)
         {
             var groupId = await StageMeterReadingsFromCsvData(csvData); //Stage

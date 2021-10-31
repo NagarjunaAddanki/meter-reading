@@ -6,21 +6,18 @@ using System.Reflection;
 
 namespace Meter.Reading.Infrastructure
 {
+    /// <summary>
+    /// Data store for meter readings.
+    /// </summary>
     public class MeterReadingDbContext : DbContext , IMeterReadingDbContext
     {
-        /// <summary>
-        /// Energy accounts
-        /// </summary>
+        /// <inheritdoc />
         public DbSet<Account> Accounts { get; set; }
 
-        /// <summary>
-        /// Meter readings
-        /// </summary>
+        /// <inheritdoc />
         public DbSet<MeterReading> Readings { get; set; }
 
-        /// <summary>
-        /// Meter readings staged for population
-        /// </summary>
+        /// <inheritdoc />
         public DbSet<StagedMeterReading> StagedReadings { get; set; }
 
         /// <summary>
