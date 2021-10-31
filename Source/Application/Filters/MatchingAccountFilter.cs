@@ -34,6 +34,7 @@ namespace Meter.Reading.Application.Filters
             validReadings.ToList().ForEach(reading =>
             {
                 reading.IsValid = matchedReadings.Contains(reading.Id);
+                reading.Reason = !reading.IsValid ? $"No matching account for the reading [{GetReadingIdentifier(reading)}]" : string.Empty;
             });
 
             await MeterReadingDbContext.SaveChangesAsync();

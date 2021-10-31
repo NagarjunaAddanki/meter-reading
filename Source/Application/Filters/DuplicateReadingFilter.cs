@@ -32,6 +32,7 @@ namespace Meter.Reading.Application.Filters
             validReadings.ToList().ForEach(reading =>
             {
                 reading.IsValid = !duplicateReadings.Contains(reading.Id);
+                reading.Reason = !reading.IsValid ? $"Meter reading [{GetReadingIdentifier(reading)}] already exists" : string.Empty;
             });
 
             await MeterReadingDbContext.SaveChangesAsync();

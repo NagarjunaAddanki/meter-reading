@@ -3,6 +3,7 @@ using Meter.Reading.Application.Interfaces;
 using Meter.Reading.Application.Validators;
 using Meter.Reading.Application.ViewModels;
 using Meter.Reading.Domain;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -24,6 +25,11 @@ namespace Meter.Reading.Application.Business
         private readonly IMeterReadingDbContext _meterReadingDbContext;
 
         /// <summary>
+        /// Logger instance
+        /// </summary>
+        private readonly ILogger<MeterReadingImporter> _logger;
+
+        /// <summary>
         /// List of data filters to be applied on meter readings.
         /// </summary>
         private readonly List<IMeterReadingFilter> _dataFilters;
@@ -34,9 +40,11 @@ namespace Meter.Reading.Application.Business
         /// <param name="meterReadingDbContext">Instance of db context</param>
         /// <param name="dataFilters">Data filters</param>
         public MeterReadingImporter(IMeterReadingDbContext meterReadingDbContext,
-            IEnumerable<IMeterReadingFilter> dataFilters)
+            IEnumerable<IMeterReadingFilter> dataFilters,
+            ILogger<MeterReadingImporter> logger)
         {
             _meterReadingDbContext = meterReadingDbContext;
+            this._logger = logger;
             _dataFilters = dataFilters.ToList();
         }
 
@@ -45,12 +53,9 @@ namespace Meter.Reading.Application.Business
         {
             var groupId = await StageMeterReadingsFromCsvData(csvData); //Stage
             await ApplyFilters(groupId); //Filter
-            var deployedReadings = await DeployValidMeterReadings(groupId); //Deploy
-            await FlushStagingData(groupId); //Flush
-            return new MeterReadingImportResult
-            {
-                NumberOfReadingsImported = deployedReadings
-            };
+            await DeployValidMeterReadings(groupId); //Deploy
+            var result = await FlushStagedData(groupId); //Flush
+            return result;
         }
 
         /// <summary>
@@ -64,25 +69,37 @@ namespace Meter.Reading.Application.Business
             using (var reader = new StringReader(csvData))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
+                //Though CSV helper supports directly deserializing from the file,
+                //we have to do the manual reading as the date time structure is not
+                //invariant in the provided csv file.
                 var records = new List<StagedMeterReading>();
                 csv.Read();
                 csv.ReadHeader();
                 while (csv.Read())
                 {
-                    var record = new StagedMeterReading
+                    try
                     {
-                        GroupId = groupId,
-                        AccountId = csv.GetField<long>(0),
-                        MeterReadValue = csv.GetField(2).Trim()
-                    };
+                        var record = new StagedMeterReading
+                        {
+                            GroupId = groupId,
+                            AccountId = csv.GetField<long>(0),
+                            MeterReadValue = csv.GetField(2).Trim()
+                        };
 
-                    //The data in csv is not invariant. Hence need to perform custom parsing.
-                    if (DateTime.TryParseExact(csv.GetField(1).Trim(),
-                        "d/MM/yyyy H:mm", CultureInfo.InvariantCulture,
-                        DateTimeStyles.None, out var readTime))
+                        //The data in csv is not invariant. Hence need to perform custom parsing.
+                        if (DateTime.TryParseExact(csv.GetField(1).Trim(),
+                            "d/MM/yyyy H:mm", CultureInfo.InvariantCulture,
+                            DateTimeStyles.None, out var readTime))
+                        {
+                            record.MeterReadingDateTime = readTime;
+                            records.Add(record);
+                        }
+                    }
+                    catch(Exception e)
                     {
-                        record.MeterReadingDateTime = readTime;
-                        records.Add(record);
+                        //If this CSV record could not be processed for some reason, log it and process the
+                        //next row. The result will indicate that one or more rows have not made it to the data store.
+                        _logger.LogError($"Invalid data encountered in the CSV file - {e.Message}");
                     }
                 }
 
@@ -111,7 +128,7 @@ namespace Meter.Reading.Application.Business
         /// </summary>
         /// <param name="groupId">Id of the group of readings which needs to be processed.</param>
         /// <returns></returns>
-        private async Task<int> DeployValidMeterReadings(Guid groupId)
+        private async Task DeployValidMeterReadings(Guid groupId)
         {
             //Query all valid readings in this group.
             var validReadings = from stagedReading in _meterReadingDbContext.StagedReadings
@@ -131,7 +148,6 @@ namespace Meter.Reading.Application.Business
 
             await _meterReadingDbContext.Readings.AddRangeAsync(meterReadings);
             await _meterReadingDbContext.SaveChangesAsync();
-            return validReadings.Count();
         }
 
         /// <summary>
@@ -139,11 +155,19 @@ namespace Meter.Reading.Application.Business
         /// </summary>
         /// <param name="groupId">Id of the group of readings which needs to be flushed out.</param>
         /// <returns></returns>
-        private async Task FlushStagingData(Guid groupId)
+        private async Task<MeterReadingImportResult> FlushStagedData(Guid groupId)
         {
             var readingsInThisGroup = _meterReadingDbContext.StagedReadings.Where(r => r.GroupId == groupId);
+            var result = new MeterReadingImportResult
+            {
+                NumberOfReadingsImported = readingsInThisGroup.Count(r => r.IsValid),
+            };
+
+            result.ValidationErrors.AddRange(readingsInThisGroup.Where(r => !r.IsValid).Select(r => r.Reason));
+
             _meterReadingDbContext.StagedReadings.RemoveRange(readingsInThisGroup);
             await _meterReadingDbContext.SaveChangesAsync();
+            return result;
         }
     }
 }

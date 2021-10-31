@@ -1,4 +1,5 @@
 ﻿using Meter.Reading.Application.Interfaces;
+using Meter.Reading.Domain;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,5 +14,8 @@ namespace Meter.Reading.Application.Filters
         {
             MeterReadingDbContext = meterReadingDbContext;
         }
+
+        protected string GetReadingIdentifier(StagedMeterReading reading) => 
+            $"{reading.AccountId} - {reading.MeterReadingDateTime.ToString("d/MM/yyyy H:mm")}";
     }
 }

@@ -23,6 +23,7 @@ namespace Meter.Reading.Application.Filters
             stagedReadings.ToList().ForEach(reading =>
             {
                 reading.IsValid = IsStagedReadingHasValidDataFormat(reading);
+                reading.Reason = !reading.IsValid ? $"Meter reading [{GetReadingIdentifier(reading)}] has invalid value [{reading.MeterReadValue}]. The meter readings must be 5 digit positive number." : string.Empty;
             });
 
             await MeterReadingDbContext.SaveChangesAsync();
@@ -30,9 +31,10 @@ namespace Meter.Reading.Application.Filters
 
         private bool IsStagedReadingHasValidDataFormat(StagedMeterReading reading)
         {
-            //Must have 5 digits
+            //Must be 5 digit positive numerical value.
             return reading.MeterReadValue.Length == 5
-                && double.TryParse(reading.MeterReadValue, out var value);
+                && double.TryParse(reading.MeterReadValue, out var value)
+                && value > 0;
         }
     }
 }
